@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "corrosion_detection"
+  site-url: "https://justforprogramming07-code.github.io/corrosion_detection"
+  description: "corrosion detection using fast ai resnet 34 "
+  repo-branch: main
+  repo-url: "https://github.com/justforprogramming07-code/corrosion_detection"

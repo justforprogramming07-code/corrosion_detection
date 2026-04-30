@@ -1,0 +1,42 @@
+[
+  {
+    "objectID": "00_core.html",
+    "href": "00_core.html",
+    "title": "Corrosion Detection",
+    "section": "",
+    "text": "!git clone https://github.com/pjsun2012/Phase5_Capstone-Project.git\n!pip install fastai\n##imorting the necessary libraries\nfrom fastai.vision.all import *",
+    "crumbs": [
+      "Corrosion Detection"
+    ]
+  },
+  {
+    "objectID": "00_core.html#define-data-path",
+    "href": "00_core.html#define-data-path",
+    "title": "Corrosion Detection",
+    "section": "Define data path",
+    "text": "Define data path\nSet the path to the dataset, which is ‘Phase5_Capstone-Project/data’, containing the ‘CORROSION’ and ‘NOCORROSION’ subfolders.\n\npath = Path('Data/data')",
+    "crumbs": [
+      "Corrosion Detection"
+    ]
+  },
+  {
+    "objectID": "00_core.html#prepare-data-with-dataloaders",
+    "href": "00_core.html#prepare-data-with-dataloaders",
+    "title": "Corrosion Detection",
+    "section": "Prepare data with DataLoaders",
+    "text": "Prepare data with DataLoaders\nbold text Load the images from the ‘CORROSION’ and ‘NOCORROSION’ folders, apply appropriate data augmentations and transformations (e.g., resizing, normalization), and create DataLoaders for training and validation.\n\nsize = 224\nbs = 32\n\ndls = ImageDataLoaders.from_folder(path, valid_pct=0.2, seed=42,\n    item_tfms=Resize(size),\n    batch_tfms=aug_transforms(mult=2) + [Normalize.from_stats(*imagenet_stats)],\n    bs=bs)\n\nprint(\"DataLoaders created with training and validation sets.\")\nprint(f\"Number of training items: {len(dls.train_ds)}\")\nprint(f\"Number of validation items: {len(dls.valid_ds)}\")\n\ndls.show_batch(max_n=9, figsize=(8,8))\n\nDataLoaders created with training and validation sets.\nNumber of training items: 1456\nNumber of validation items: 363",
+    "crumbs": [
+      "Corrosion Detection"
+    ]
+  },
+  {
+    "objectID": "00_core.html#initialize-learner-with-resnet34",
+    "href": "00_core.html#initialize-learner-with-resnet34",
+    "title": "Corrosion Detection",
+    "section": "Initialize Learner with ResNet34",
+    "text": "Initialize Learner with ResNet34\nCreate a cnn_learner using the prepared DataLoaders, the resnet34 architecture as the backbone, and define metrics as accuracy for evaluating the model’s performance.\n\nlearn = vision_learner(dls, resnet34, metrics=accuracy)\nprint(\"Learner initialized with resnet34 and accuracy metric.\")\n\nLearner initialized with resnet34 and accuracy metric.\n\n\n\nlearn.fine_tune(4)\nprint(\"Model training completed for 4 epochs.\")\n\n\n\n\n\n\n\n\n\nepoch\ntrain_loss\nvalid_loss\naccuracy\ntime\n\n\n\n\n0\n0.593704\n0.269474\n0.925620\n06:18\n\n\n\n\n\n\n\n\n\n\nepoch\ntrain_loss\nvalid_loss\naccuracy\ntime\n\n\n\n\n0\n0.286005\n0.204621\n0.939394\n09:25\n\n\n1\n0.248296\n0.220989\n0.942149\n09:19\n\n\n2\n0.170603\n0.123218\n0.958678\n09:11\n\n\n3\n0.111802\n0.124969\n0.961433\n08:56\n\n\n\n\n\n\nModel training completed for 4 epochs.\n\n\nInitial Epoch (before fine-tuning): So there was this initial epoch (0) where the train_loss hit 0.593704 and valid_loss was 0.269474, with accuracy at 0.925620 (92.56%). That’s basically what the model looked like before we ran the fine_tune method to adjust learning rates and unfreeze layers.\nFine-tuning Epochs (0-3):\nLosses: The train_loss and valid_loss both dropped pretty consistently over those 4 epochs. Train_loss went from 0.286 down to 0.112, and valid_loss fell from 0.204 to 0.125. So the model was definitely learning and getting better at fitting both the training data and the validation data.\nAccuracy: Validation accuracy climbed steadily — started at 93.94% in the first epoch and ended up at 96.14% by epoch 4. That’s a solid improvement, and it shows the model’s actually getting better at classifying the corrosion images.\nGeneralization: The valid_loss and train_loss stayed pretty close to each other throughout, which is a good sign that the model wasn’t overfitting. There was a slight uptick in valid_loss at epoch 3 compared to epoch 2 (0.124969 vs 0.123218) while train_loss kept dropping — that’s something to keep an eye on — but overall the trend looks really good.\nTime: Each epoch took around 9 minutes to run.\n\nlearn.recorder.plot_loss()\n\n\n\n\n\n\n\n\nThe plot above visualizes the training and validation loss over the epochs. To see the specific metrics for each epoch, including accuracy, we can display the recorded metrics directly.\n\nfrom ipywidgets import FileUpload\nfrom IPython.display import display\nimport io\n\ndef upload_and_predict():\n    uploader = FileUpload(accept='image/*', multiple=False)\n    print(\"Please upload an image for prediction:\")\n    display(uploader)\n\n    def on_upload_change(change):\n        if uploader.value:\n            uploaded_file = next(iter(uploader.value.values()))\n            content = uploaded_file['content']\n            img_bytes = io.BytesIO(content)\n            img = PILImage.create(img_bytes)\n\n            # Make prediction\n            pred, pred_idx, probs = learn.predict(img)\n\n            print(f\"\\nPrediction: {pred}\")\n            print(f\"Probability of '{learn.dls.vocab[0]}': {probs[0]:.4f}\")\n            print(f\"Probability of '{learn.dls.vocab[1]}': {probs[1]:.4f}\")\n\n            # Display the uploaded image\n            display(img)\n\n    uploader.observe(on_upload_change, names='value')\n\nupload_and_predict()\n\nPlease upload an image for prediction:\n\n\n\n\n\n\npreds, targets = learn.get_preds(ds_idx=1)\nprint(\"Predictions and actual labels obtained for the validation set.\")\nprint(f\"Shape of predictions: {preds.shape}\")\nprint(f\"Shape of actual labels: {targets.shape}\")\n\n\n\n\nPredictions and actual labels obtained for the validation set.\nShape of predictions: torch.Size([363, 2])\nShape of actual labels: torch.Size([363])\n\n\n\nimport random\nimport matplotlib.pyplot as plt\n\nn_samples = 4\n\n# Get indices of some random samples from the validation set\nsample_indices = random.sample(range(len(dls.valid_ds)), n_samples)\n\nprint(f\"Displaying {n_samples} random samples from the validation set:\")\n\nplt.figure(figsize=(10, 10))\nfor i, idx in enumerate(sample_indices):\n    img, actual_label_idx = dls.valid_ds[idx]\n    actual_label = dls.vocab[actual_label_idx]\n\n    # Get predicted label and confidence from 'preds' tensor\n    predicted_probs = preds[idx]\n    predicted_label_idx = predicted_probs.argmax().item()\n    predicted_label = dls.vocab[predicted_label_idx]\n    confidence = predicted_probs[predicted_label_idx].item()\n\n    plt.subplot(2, 2, i + 1)\n    img.show(ctx=plt.gca(), title=f'Actual: {actual_label}\\nPred: {predicted_label} (Conf: {confidence:.2f})')\n    plt.axis('off')\n\nplt.tight_layout()\nplt.show()\n\nDisplaying 4 random samples from the validation set:\n\n\n\n\n\n\n\n\n\nWhat Our Model Learned We trained a corrosion detection model over 4 epochs using ResNet34, and the results were pretty solid. The loss curves show steady improvement — both training and validation loss dropped consistently, which is exactly what you want to see. It means the model wasn’t just memorizing the data, it was actually learning to generalize. Starting from around 93.9% accuracy, the model climbed up to over 96.1% by the end. That’s a real improvement. When we ran predictions on the validation set, it was clear the model had picked up on the right patterns. We tested it on random samples and it nailed the predictions almost every time — you could see it was genuinely confident in its classifications. So in short? The model works. It’s learned to spot corrosion reliably, and the numbers back it up.",
+    "crumbs": [
+      "Corrosion Detection"
+    ]
+  }
+]

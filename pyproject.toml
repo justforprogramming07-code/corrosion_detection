@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "corrosion_detection"
+dynamic = ["version"]
+description = "corrosion detection using fast ai resnet 34 "
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [{name = "Huzaifa Panchi", email = "justforprogramming07@gmail.com"}]
+keywords = ['nbdev']
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+]
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/justforprogramming07-code/corrosion_detection"
+Documentation = "https://justforprogramming07-code.github.io/corrosion_detection/"
+
+[project.entry-points.nbdev]
+corrosion_detection = "corrosion_detection._modidx:d"
+
+[tool.setuptools.dynamic]
+version = {attr = "corrosion_detection.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["corrosion_detection"]
+
+[tool.nbdev]
